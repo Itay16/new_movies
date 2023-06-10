@@ -1,36 +1,39 @@
-import json
-from movies import Movie
+import csv
 import requests
+from movies import Movie
 
 API_KEY = '3863e126'
 MOVIES_FILE = 'movie_storage.json'
 
 
-class JsonStorage:
+class StorageCSV:
     def __init__(self, filename):
         self.filename = filename
 
     def _read_movies_from_file(self):
         try:
             with open(self.filename, 'r') as file:
-                data = json.load(file)
+                reader = csv.DictReader(file)
+                data = list(reader)
         except FileNotFoundError:
             return []
         else:
-            return data if data is not None else []
+            return data
 
     def _write_movies_to_file(self, movies):
-        with open(self.filename, 'w') as file:
-            json.dump(movies, file)
+        fieldnames = ['title', 'year', 'rating']
+        with open(self.filename, 'w', newline='') as file:
+            writer = csv.DictWriter(file, fieldnames=fieldnames)
+            writer.writeheader()
+            writer.writerows(movies)
 
     def list_movies(self):
         try:
-            with open(self.filename, 'r') as file:
-                movies = json.load(file)
+            with open(self.filename, 'r', newline='') as file:
+                reader = csv.DictReader(file)
+                return list(reader)
         except FileNotFoundError:
             return []
-        else:
-            return movies
 
     def add_movie(self):
         """Add a movie to the database"""
@@ -56,7 +59,7 @@ class JsonStorage:
                 print(f"Movie '{movie['title']} ({movie['year']})' added successfully.")
             else:
                 print("Movie not found.")
-        except ConnectionError:
+        except requests.exceptions.RequestException:
             print("Sorry, it seems like you're not connected to the internet!")
 
     def delete_movie(self, title):

@@ -1,28 +1,19 @@
 from abc import ABC, abstractmethod
-import json
 
 
 class IStorage(ABC):
     @abstractmethod
-    def list_movies(self):  # Lists all movies
-        with open('movie_storage.json', 'r') as newfile:
-            movies = json.load(newfile)
-        print(f"\n{len(movies)} movies in total:")
-        for movie in movies:
-            rating = movie['rating']
-            title = movie['title']
-            year = movie['year']
-            print(f"{title} ({year}): {rating}")
-        print('\n')
-
-    @abstractmethod
-    def add_movie(self, title, year, rating):  # Adds new movie to file
+    def list_movies(self):
         pass
 
     @abstractmethod
-    def delete_movie(self, title):  # Deletes existing movie
+    def add_movie(self):
         pass
 
     @abstractmethod
-    def update_movie(self, title, rating):  # Updates a movie's info
+    def delete_movie(self, title):
+        pass
+
+    @abstractmethod
+    def update_movie(self, title, rating):
         pass

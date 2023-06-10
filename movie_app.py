@@ -10,42 +10,6 @@ API_KEY = '3863e126'
 MOVIES_FILE = 'movie_storage.json'
 
 
-def get_rating(movie):
-    """Gets rating from a single movie"""
-    return float(movie["rating"])
-
-
-def _generate_website():
-    with open(MOVIES_FILE, 'r') as newfile:
-        all_movies = json.load(newfile)
-
-    with open('index_template.html', 'r') as fileobj:
-        html_template = fileobj.read()
-
-    ADDRESS = f"http://www.omdbapi.com/?apikey={API_KEY}"
-    movies_html = ""
-    for movie in all_movies:
-        movie_response = requests.get(f"{ADDRESS}&t={movie['title']}")
-        movie_data = movie_response.json()
-        poster = movie_data['Poster']
-        year = movie_data['Year']
-        title = movie_data['Title']
-        movie_html = (
-            '<li><br>'
-            '<div class="movie">'
-            f'<img class="movie-poster" src="{poster}"/><br>'
-            f'<div class="movie-title">{title}</div><br>'
-            f'<div class="movie-year">{year}</div><br>'
-            '</div><br>'
-            '</li><br>'
-        )
-        movies_html += movie_html
-        html_output = html_template.replace('__TEMPLATE_TITLE__', "Itay's Movie Application")
-        html_output = html_output.replace('__TEMPLATE_MOVIE_GRID__', movies_html)
-    with open('index.html', 'w') as newfile:
-        newfile.write(html_output)
-
-
 class MovieApp:
     def __init__(self, storage):
         self.all_movies = None
@@ -53,6 +17,40 @@ class MovieApp:
 
     def _command_list_movies(self):
         self.all_movies = self._storage.list_movies()
+
+    def get_rating(movie):
+        """Gets rating from a single movie"""
+        return float(movie["rating"])
+
+    def _generate_website():
+        with open(MOVIES_FILE, 'r') as newfile:
+            all_movies = json.load(newfile)
+
+        with open('index_template.html', 'r') as fileobj:
+            html_template = fileobj.read()
+
+        ADDRESS = f"http://www.omdbapi.com/?apikey={API_KEY}"
+        movies_html = ""
+        for movie in all_movies:
+            movie_response = requests.get(f"{ADDRESS}&t={movie['title']}")
+            movie_data = movie_response.json()
+            poster = movie_data['Poster']
+            year = movie_data['Year']
+            title = movie_data['Title']
+            movie_html = (
+                '<li><br>'
+                '<div class="movie">'
+                f'<img class="movie-poster" src="{poster}"/><br>'
+                f'<div class="movie-title">{title}</div><br>'
+                f'<div class="movie-year">{year}</div><br>'
+                '</div><br>'
+                '</li><br>'
+            )
+            movies_html += movie_html
+            html_output = html_template.replace('__TEMPLATE_TITLE__', "Itay's Movie Application")
+            html_output = html_output.replace('__TEMPLATE_MOVIE_GRID__', movies_html)
+        with open('index.html', 'w') as newfile:
+            newfile.write(html_output)
 
     def _command_movie_stats(self):
         """Gets all stats about the movies"""
@@ -111,13 +109,13 @@ def run():
         elif user_choice == '5':
             MovieApp._command_movie_stats(all_movies)
         elif user_choice == '6':
-            all_movies.random_movie(all_movies)
+            movies.random_movie(all_movies)
         elif user_choice == '7':
-            all_movies.search_for_movie(all_movies)
+            movies.search_for_movie(all_movies)
         elif user_choice == '8':
-            all_movies.sort_movies_by_rating(all_movies)
+            movies.sort_movies_by_rating(all_movies)
         elif user_choice == '9':
-            _generate_website()
+            MovieApp._generate_website()
             print("Website generated successfully!")
         else:
             print("\nInvalid choice!\n")

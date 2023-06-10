@@ -12,5 +12,4 @@ class MovieApp:
         pass
 
     def run(self):
-        print('HELLO')
-        print('how are you')
+        pass

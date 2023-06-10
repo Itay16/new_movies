@@ -7,7 +7,6 @@ API_KEY = '3863e126'
 MOVIES_FILE = 'movie_storage.json'
 
 
-
 class StorageJson(IStorage):
     def __init__(self, file_path):  # Initializing new storage
         self.movies = None

@@ -1,5 +1,9 @@
+import json
 import statistics
 import random
+import movie_storage
+import requests
+import movie_app
 
 API_KEY = '3863e126'
 MOVIES_FILE = 'movie_storage.json'
@@ -87,37 +91,6 @@ def sort_movies_by_rating(movies):
     return sorted_movies
 
 
-def generate_website(MOVIES_FILE, API_KEY):
-    with open(MOVIES_FILE, 'r') as newfile:
-        movies = json.load(newfile)
-
-    with open('_static/index_template.html', 'r') as fileobj:
-        html_template = fileobj.read()
-
-    ADDRESS = f"http://www.omdbapi.com/?apikey={API_KEY}"
-    movies_html = ""
-    for movie in movies:
-        movie_response = requests.get(f"{ADDRESS}&t={movie['title']}")
-        movie_data = movie_response.json()
-        poster = movie_data['Poster']
-        year = movie_data['Year']
-        title = movie_data['Title']
-        movie_html = (
-            '<li><br>'
-            '<div class="movie">'
-            f'<img class="movie-poster" src="{poster}"/><br>'
-            f'<div class="movie-title">{title}</div><br>'
-            f'<div class="movie-year">{year}</div><br>'
-            '</div><br>'
-            '</li><br>'
-        )
-        movies_html += movie_html
-        html_output = html_template.replace('__TEMPLATE_TITLE__', "Itay's Movie Application")
-        html_output = html_output.replace('__TEMPLATE_MOVIE_GRID__', movies_html)
-    with open('index.html', 'w') as newfile:
-        newfile.write(html_output)
-
-
 def main():
     """Main function"""
     with open('movie_storage.json', 'r') as newfile:
@@ -127,13 +100,13 @@ def main():
     user_choice = input("Enter a number (0-9): ")
     while user_choice != '0':
         if user_choice == '1':
-            list_movies('movie_storage.json')
+            movie_storage.list_movies('movie_storage.json')
         elif user_choice == '2':
-            add_movie(movies, API_KEY)
+            movie_storage.add_movie(movies, API_KEY)
         elif user_choice == '3':
-            delete_movie(MOVIES_FILE)
+            movie_storage.delete_movie(MOVIES_FILE)
         elif user_choice == '4':
-            update_movie(movies)
+            movie_storage.update_movie(movies)
         elif user_choice == '5':
             stats(movies)
         elif user_choice == '6':
@@ -143,7 +116,7 @@ def main():
         elif user_choice == '8':
             sort_movies_by_rating(movies)
         elif user_choice == '9':
-            generate_website(MOVIES_FILE, API_KEY)
+            movie_app.generate_website(MOVIES_FILE, API_KEY)
             print("Website generated successfully!")
         else:
             print("\nInvalid choice!\n")
@@ -151,6 +124,3 @@ def main():
         user_choice = input("Enter a number (0-9): ")
     print("Goodbye!")
 
-
-if __name__ == "__main__":
-    main()

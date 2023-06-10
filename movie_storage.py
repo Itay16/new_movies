@@ -4,11 +4,8 @@ import requests
 API_KEY = '3863e126'
 MOVIES_FILE = 'movie_storage.json'
 
-with open(MOVIES_FILE, 'r') as newfile:
-    movies = json.load(newfile)
 
-
-def list_movies():
+def list_movies(MOVIES_FILE):
     """
     Returns a dictionary of dictionaries that
     contains the movies information in the database.
@@ -27,6 +24,8 @@ def list_movies():
       },
     }
     """
+    with open(MOVIES_FILE, 'r') as newfile:
+        movies = json.load(newfile)
     print(f"\n{len(movies)} movies in total:")
     for movie in movies:
         rating = movie['rating']
@@ -36,7 +35,7 @@ def list_movies():
     print('\n')
 
 
-def add_movie():
+def add_movie(movies, API_KEY):
     """
       Adds a movie to the movies' database.
       Loads the information from the JSON file, add the movie,
@@ -47,12 +46,12 @@ def add_movie():
     movie_response = requests.get(f"{ADDRESS}&t={new_movie_title}")
     new_data = movie_response.json()
     try:
-        for info in new_data:
+        for movie in new_data:
             title = new_data['Title']
             year = new_data['Year']
             new_rating = float(new_data['imdbRating'])
         new_movie = {
-            'title': new_movie_title,
+            'title': title,
             'rating': new_rating,
             'year': year
         }
@@ -68,19 +67,19 @@ def add_movie():
         print("Hmm... It doesn't look like you have internet!")
 
 
-def delete_movie(movies_file):
+def delete_movie(MOVIES_FILE):
     """
     Deletes a movie from the movies' database.
     Loads the information from the JSON file, deletes the movie,
     and saves it. The function doesn't need to validate the input.
     """
     title_to_delete = input("Enter the title of the movie you want to delete: ")
-    with open(movies_file, 'r') as new_file:
+    with open(MOVIES_FILE, 'r') as new_file:
         movies = json.load(new_file)
     for movie in movies:
         if movie['title'] == title_to_delete:
             movies.remove(movie)
-            with open(movies_file, 'w') as f:
+            with open(MOVIES_FILE, 'w') as f:
                 json.dump(movies, f)
             print(f"{movie['title']} was removed from the database.")
             return

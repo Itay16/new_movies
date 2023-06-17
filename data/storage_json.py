@@ -16,7 +16,7 @@ class JsonStorage:
         except FileNotFoundError:
             return []
         else:
-            return data if data is not None else []
+            return data
 
     def _write_movies_to_file(self, movies):
         with open(self.filename, 'w') as file:
@@ -26,37 +26,14 @@ class JsonStorage:
         try:
             with open(self.filename, 'r') as file:
                 movies = json.load(file)
+                return movies
         except FileNotFoundError:
             return []
-        else:
-            return movies
 
-    def add_movie(self):
-        """Add a movie to the database"""
-        title = input("Enter the movie title: ")
-
-        try:
-            # Make a request to the movies API to fetch movie details
-            response = requests.get(f"http://www.omdbapi.com/?apikey={API_KEY}&t={title}")
-            response.raise_for_status()  # Raise an exception if the request was unsuccessful
-            movie_data = response.json()
-
-            if movie_data.get('Response') == 'True':
-                movie = {
-                    'title': movie_data['Title'],
-                    'year': movie_data['Year'],
-                    'rating': movie_data['imdbRating'],
-                }
-
-                movies = self._read_movies_from_file()  # Read existing movies from file
-                movies.append(movie)  # Add the new movie
-                self._write_movies_to_file(movies)  # Write all movies back to file
-
-                print(f"Movie '{movie['title']} ({movie['year']})' added successfully.")
-            else:
-                print("Movie not found.")
-        except ConnectionError:
-            print("Sorry, it seems like you're not connected to the internet!")
+    def add_movie(self, movie):
+        movies = self._read_movies_from_file()
+        movies.append(movie)
+        self._write_movies_to_file(movies)
 
     def delete_movie(self, title):
         movies = self._read_movies_from_file()

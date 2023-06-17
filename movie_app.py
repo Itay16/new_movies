@@ -1,11 +1,16 @@
+import os
+import random
+
 import requests
+
 import movies
 from movies import Movie
-import random
 
 API_KEY = '3863e126'
 MOVIES_FILE = 'data/movie_storage.json'
 ADDRESS = f'http://www.omdbapi.com/?apikey={API_KEY}'
+OUTPUT_FOLDER = 'output_folder'
+CSS_FILE = 'static/style.css'
 
 
 class MovieApp:
@@ -35,10 +40,7 @@ class MovieApp:
                     'rating': movie_data['imdbRating'],
                 }
 
-                movies = self._storage.list_movies()
-                movies.append(movie)
-                self._storage.write_movies(movies)
-
+                self._storage.add_movie(movie)  # Pass the movie to add_movie method
                 print(f"Movie '{movie['title']} ({movie['year']})' added successfully.")
             else:
                 print("Movie not found.")
@@ -104,6 +106,13 @@ class MovieApp:
             html_output = html_template.replace('__TEMPLATE_TITLE__', "Itay's Movie Application")
             html_output = html_output.replace('__TEMPLATE_MOVIE_GRID__', movies_html)
 
+            css_code = ""
+            css_file_path = os.path.join('static', 'style.css')
+            with open(css_file_path, 'r') as css_file:
+                css_code = css_file.read()
+
+            html_output = html_output.replace('__TEMPLATE_CSS__', css_code)
+
             with open('templates/index.html', 'w') as newfile:
                 newfile.write(html_output)
 
@@ -134,6 +143,17 @@ class MovieApp:
             print("\nMovie Statistics:")
             print(f"Highest rating: {highest_rating}")
             print(f"Lowest rating: {lowest_rating}")
+
+            highest_rated_movies = [movie for movie in all_movies if float(movie['rating']) == highest_rating]
+            print("Movies with the highest rating:")
+            for movie in highest_rated_movies:
+                print(f"{movie['title']} ({movie['year']}): {movie['rating']}")
+
+            lowest_rated_movies = [movie for movie in all_movies if float(movie['rating']) == lowest_rating]
+            print("Movies with the lowest rating:")
+            for movie in lowest_rated_movies:
+                print(f"{movie['title']} ({movie['year']}): {movie['rating']}")
+
             print(f"Average rating: {average_rating:.2f}")
             print()
         else:
@@ -177,6 +197,6 @@ class MovieApp:
 
 
 if __name__ == "__main__":
-    storage = movies.MovieStorage(MOVIES_FILE)
+    storage = movies.Movie(MOVIES_FILE)
     app = MovieApp(storage)
     app.run()

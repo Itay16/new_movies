@@ -1,5 +1,4 @@
 import json
-from movies import Movie
 import requests
 
 API_KEY = '3863e126'

@@ -1,9 +1,9 @@
 from movie_app import MovieApp
-from storage_json import JsonStorage
+from movies.data.storage_json import JsonStorage
 
 
 API_KEY = '3863e126'
-MOVIES_FILE = 'movie_storage.json'
+MOVIES_FILE = 'data/movie_storage.json'
 
 
 def main():

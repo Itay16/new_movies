@@ -1,6 +1,5 @@
 import csv
 import requests
-from movies import Movie
 
 API_KEY = '3863e126'
 MOVIES_FILE = 'movie_storage.json'

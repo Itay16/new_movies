@@ -1,40 +1,32 @@
-from abc import ABC, abstractmethod
 import requests
-import json
 import movies
-import storage_json
-import storage_csv
-import random
 from movies import Movie
+import random
 
 API_KEY = '3863e126'
-MOVIES_FILE = 'movie_storage.json'
+MOVIES_FILE = 'data/movie_storage.json'
+ADDRESS = f'http://www.omdbapi.com/?apikey={API_KEY}'
 
 
 class MovieApp:
     def __init__(self, storage):
         self._storage = storage
-        self.all_movies = self._storage.list_movies()
 
     def list_movies(self):
-        self.all_movies = self._storage.list_movies()
-        if not self.all_movies:
+        all_movies = self._storage.list_movies()
+        if not all_movies:
             print("No movies found.")
         else:
-            for i in range(len(self.all_movies)):
-                movie_data = self.all_movies[i]
+            for i, movie_data in enumerate(all_movies, start=1):
                 movie = Movie(movie_data['title'], movie_data['year'], movie_data['rating'])
-                print(f"{i + 1}. {movie.title} ({movie.year}): {movie.rating}")
+                print(f"{i}. {movie.title} ({movie.year}): {movie.rating}")
 
     def add_movie(self):
         """Add a movie to the database"""
         title = input("Enter the movie title: ")
 
         try:
-            # Make a request to the movies API to fetch movie details
-            response = requests.get(f"http://www.omdbapi.com/?apikey={API_KEY}&t={title}")
-            response.raise_for_status()  # Raise an exception if the request was unsuccessful
-            movie_data = response.json()
+            movie_data = self.fetch_movie_data(title)
 
             if movie_data.get('Response') == 'True':
                 movie = {
@@ -43,9 +35,9 @@ class MovieApp:
                     'rating': movie_data['imdbRating'],
                 }
 
-                movies = self._storage.list_movies()  # Read existing movies from storage
-                movies.append(movie)  # Add the new movie
-                self._storage.write_movies(movies)  # Write all movies back to storage
+                movies = self._storage.list_movies()
+                movies.append(movie)
+                self._storage.write_movies(movies)
 
                 print(f"Movie '{movie['title']} ({movie['year']})' added successfully.")
             else:
@@ -53,10 +45,16 @@ class MovieApp:
         except ConnectionError:
             print("Sorry, it seems like you're not connected to the internet!")
 
+    def fetch_movie_data(self, title):
+        """Fetches movie details from the OMDB API"""
+        response = requests.get(f"http://www.omdbapi.com/?apikey={API_KEY}&t={title}")
+        response.raise_for_status()
+        return response.json()
+
     def search_for_movie(self):
         """Searches the database for a movie based on a string"""
         user_search = input("\nEnter the movie's name: ").lower()
-        found_movies = [movie for movie in self.all_movies if user_search in movie['title'].lower()]
+        found_movies = [movie for movie in self._storage.list_movies() if user_search in movie['title'].lower()]
         if found_movies:
             print("I found:")
             for movie in found_movies:
@@ -66,8 +64,9 @@ class MovieApp:
 
     def random_movie(self):
         """Generates a random movie"""
-        if self.all_movies:
-            movie_random = random.choice(self.all_movies)
+        all_movies = self._storage.list_movies()
+        if all_movies:
+            movie_random = random.choice(all_movies)
             print(f"{movie_random['title']} ({movie_random['year']}): {movie_random['rating']}")
         else:
             print("No movies found.")
@@ -76,19 +75,16 @@ class MovieApp:
         """Gets rating from a single movie"""
         return float(movie["rating"])
 
-    import requests
-
     def generate_website(self):
-        if self.all_movies:
-            with open('index_template.html', 'r') as fileobj:
+        all_movies = self._storage.list_movies()
+        if all_movies:
+            with open('templates/index_template.html', 'r') as fileobj:
                 html_template = fileobj.read()
 
             movies_html = ""
-            ADDRESS = f"http://www.omdbapi.com/?apikey={API_KEY}"
-            for movie in self.all_movies:
+            for movie in all_movies:
                 movie_title = movie['title']
-                movie_response = requests.get(f"{ADDRESS}&t={movie_title}")
-                movie_data = movie_response.json()
+                movie_data = self.fetch_movie_data(movie_title)
 
                 if movie_data['Response'] == 'True':
                     poster = movie_data['Poster']
@@ -108,7 +104,7 @@ class MovieApp:
             html_output = html_template.replace('__TEMPLATE_TITLE__', "Itay's Movie Application")
             html_output = html_output.replace('__TEMPLATE_MOVIE_GRID__', movies_html)
 
-            with open('index.html', 'w') as newfile:
+            with open('templates/index.html', 'w') as newfile:
                 newfile.write(html_output)
 
             print("Website generated successfully!")
@@ -117,8 +113,9 @@ class MovieApp:
 
     def sort_movies_by_rating(self):
         """Sorts movies from best to worst"""
-        if self.all_movies:
-            sorted_movies = sorted(self.all_movies, key=self.get_rating, reverse=True)
+        all_movies = self._storage.list_movies()
+        if all_movies:
+            sorted_movies = sorted(all_movies, key=self.get_rating, reverse=True)
             for movie in sorted_movies:
                 print(f"{movie['title']} ({movie['year']}): {movie['rating']}")
         else:
@@ -126,20 +123,21 @@ class MovieApp:
 
     def movie_stats(self):
         """Display statistics about the movies"""
-        all_movies = self._storage.list_movies()  # Get the movies from storage
+        all_movies = self._storage.list_movies()
+        if all_movies:
+            ratings = [float(movie['rating']) for movie in all_movies]
 
-        total_movies = len(all_movies)
-        ratings = [float(movie['rating']) for movie in all_movies]
+            highest_rating = max(ratings)
+            lowest_rating = min(ratings)
+            average_rating = sum(ratings) / len(all_movies)
 
-        highest_rating = max(ratings)
-        lowest_rating = min(ratings)
-        average_rating = sum(ratings) / total_movies
-
-        print("\nMovie Statistics:")
-        print(f"Highest rating: {highest_rating}")
-        print(f"Lowest rating: {lowest_rating}")
-        print(f"Average rating: {average_rating:.2f}")
-        print()
+            print("\nMovie Statistics:")
+            print(f"Highest rating: {highest_rating}")
+            print(f"Lowest rating: {lowest_rating}")
+            print(f"Average rating: {average_rating:.2f}")
+            print()
+        else:
+            print("No movies found.")
 
     def run(self):
         """Main function"""
@@ -151,17 +149,14 @@ class MovieApp:
             if user_choice == '1':
                 self.list_movies()
             elif user_choice == '2':
-                self._storage.add_movie()
-                self.all_movies = self._storage.list_movies()
+                self.add_movie()
             elif user_choice == '3':
                 title_to_delete = input("Enter the title of the movie you want to delete: ")
                 self._storage.delete_movie(title_to_delete)
-                self.all_movies = self._storage.list_movies()
             elif user_choice == '4':
                 title_to_update = input("Enter the title of the movie you want to update: ")
                 new_rating = input("Enter the new rating: ")
                 self._storage.update_movie(title_to_update, new_rating)
-                self.all_movies = self._storage.list_movies()
             elif user_choice == '5':
                 self.movie_stats()
             elif user_choice == '6':
@@ -179,3 +174,9 @@ class MovieApp:
             user_choice = input("Enter a number (0-9): ")
 
         print("Goodbye!")
+
+
+if __name__ == "__main__":
+    storage = movies.MovieStorage(MOVIES_FILE)
+    app = MovieApp(storage)
+    app.run()
